@@ -148,6 +148,8 @@ try:
     site_ref = sys.argv[1]
     real_time_flag = sys.argv[2]
     time_scale = int(sys.argv[3])
+    
+
     user_start_Datetime = parse(sys.argv[4])
     user_end_Datetime = parse(sys.argv[5])
 
@@ -198,45 +200,57 @@ try:
     kstep=0 
     stop = False
     simtime = 0
-    while simtime < 86400 and not stop:
-        # look in the database for current write arrays
-        # for each write array there is an array of controller
-        # input values, the first element in the array with a value
-        # is what should be applied to the simulation according to Project Haystack
-        # convention
-        for array in write_arrays.find({"siteRef": site_ref}):
-            for val in array.get('val'):
-                if val:
-                    _id = array.get('_id')
-                    dis = id_and_dis.get(_id)
-                    if dis:
-                        u[dis] = val
-                        u[dis.replace('_u', '_activate')] = 1
-                        print('inputs:')
-                        print(u)
-                        break
-
-        y_output = tc.advance(u)
-        simtime = tc.final_time
-        output_time_string = 's:%s' %(simtime)
-        recs.update_one( {"_id": site_ref}, { "$set": {"rec.datetime": output_time_string, "rec.simStatus":"s:Running"} } )
-
-        # get each of the simulation output values and feed to the database
-        for key in y_output.keys():
-            value_y = y_output[key]
-            
-            if key!='time': 
-                output_id = tagid_and_outputs[key]                          
-                recs.update_one( {"_id": output_id }, {"$set": {"rec.curVal":"n:%s" %value_y, "rec.curStatus":"s:ok","rec.cur": "m:" }} )        
-
-        time.sleep(5)
-
-        # A client may have requested that the simulation stop early,
-        # look for a signal to stop from the database
-        site = recs.find_one({"_id": site_ref})
-        if site and (site.get("rec",{}).get("simStatus") == "s:Stopping") :
-            stop = True;
+    stepsize_time = 60.0 / time_scale 
+    #add time-control for simulation to wait for MPC being finished
+    t = time.time()  
+    next_t = t
     
+    while simtime < 60*6 and not stop:
+        
+        t = time.time()
+        
+        if t >= next_t:
+            # look in the database for current write arrays
+            # for each write array there is an array of controller
+            # input values, the first element in the array with a value
+            # is what should be applied to the simulation according to Project Haystack
+            # convention
+            for array in write_arrays.find({"siteRef": site_ref}):
+                for val in array.get('val'):
+                    if val:
+                        _id = array.get('_id')
+                        dis = id_and_dis.get(_id)
+                        if dis:
+                            u[dis] = val
+                            u[dis.replace('_u', '_activate')] = 1
+                            print('inputs:')
+                            print(u)
+                            break
+
+            y_output = tc.advance(u)
+            simtime = tc.final_time
+            output_time_string = 's:%s' %(simtime)
+            recs.update_one( {"_id": site_ref}, { "$set": {"rec.datetime": output_time_string, "rec.simStatus":"s:Running"} } )
+
+            # get each of the simulation output values and feed to the database
+            for key in y_output.keys():
+                value_y = y_output[key]
+            
+                if key!='time': 
+                    output_id = tagid_and_outputs[key]                          
+                    recs.update_one( {"_id": output_id }, {"$set": {"rec.curVal":"n:%s" %value_y, "rec.curStatus":"s:ok","rec.cur": "m:" }} )        
+
+            time.sleep(5)
+
+            # A client may have requested that the simulation stop early,
+            # look for a signal to stop from the database
+            site = recs.find_one({"_id": site_ref})
+            if site and (site.get("rec",{}).get("simStatus") == "s:Stopping") :
+                stop = True;
+
+            next_t = t + stepsize_time
+   
+ 
     # Clear all current values from the database when the simulation is no longer running
     recs.update_one({"_id": site_ref}, {"$set": {"rec.simStatus": "s:Stopped"}, "$unset": {"rec.datetime": ""} }, False)
     recs.update_many({"site_ref": site_ref, "rec.cur": "m:"}, {"$unset": {"rec.curVal": "", "rec.curErr": ""}, "$set": { "rec.curStatus": "s:disabled" } }, False)
