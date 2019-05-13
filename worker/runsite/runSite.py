@@ -85,12 +85,14 @@ def replace_idf_settings(idf_file, pattern, date_start, date_end, time_step, yea
         f.truncate()
         #print("*** debugging: i am checking here!!! ")
         for line in lines:
-            count = count + 1             
+            count = count + 1 
+            tmp = line.split(',')
+            line_head = tmp[0].strip()            
             if pattern in line:
                 #RunPeriod block
                 line_runperiod = count
                 print("*** degugging for the runperiod *** ", line_runperiod)
-            if 'Timestep,' in line:
+            if 'Timestep' == line_head:
                 line_timestep = count+1 
         
         for i, line in enumerate(lines):
@@ -176,8 +178,8 @@ def finalize_simulation():
     s3_key = "simulated/%s/%s" % (sp.site_ref,tar_name)
     bucket.upload_file(tar_name, s3_key)
     
-    os.remove(tar_name)
-    shutil.rmtree(sp.workflow_directory)
+    #os.remove(tar_name)
+    #shutil.rmtree(sp.workflow_directory)
 
     site = recs.find_one({"_id": sp.site_ref})
     name = site.get("rec",{}).get("dis", "Unknown") if site else "Unknown"

@@ -10,6 +10,13 @@
          "name" : "ExposeTimeVariable240"
       },
       {
+         "arguments" : {},
+         "description" : "This measure will output the Electricity:Facility through EMS modules.",
+         "measure_dir_name" : "power_sensor_240",
+         "modeler_description" : "EMS:GlobalVariable; EMS:Program; EMS:ProgramCallingManager; EMS:OutputVariable; Output:Variable; output:Meter",
+         "name" : "PowerSensor240"
+      },
+      {
          "arguments" : {
             "local_test" : false
          },
