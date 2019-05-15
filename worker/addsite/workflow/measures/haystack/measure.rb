@@ -1,4 +1,4 @@
-########################################################################################################################
+#939-49ce-b403-ea08247b379d}#######################################################################################################################
 #  Copyright (c) 2008-2018, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
@@ -325,8 +325,10 @@ class Haystack < OpenStudio::Ruleset::ModelUserScript
       
       wf = model.weatherFile.get
       building = model.getBuilding
-      
+      #print building.handle, "Hey problem is here!!!******" 
       site_json[:id] = create_ref(building.handle)
+      #site_id = create_uuid("")
+      #site_json[:id] = site_id
       site_json[:dis] = create_str(building.name.to_s)
       site_json[:site] = "m:"
       site_json[:area] = create_num(building.floorArea)
@@ -383,6 +385,7 @@ class Haystack < OpenStudio::Ruleset::ModelUserScript
         var_haystack_json[:id] = uuid
         var_haystack_json[:dis] = create_str(outvar.nameString)
         var_haystack_json[:siteRef] = create_ref(building.handle)
+        #var_haystack_json[:siteRef] = site_id
         var_haystack_json[:point]="m:"
         var_haystack_json[:cur]="m:" 
         var_haystack_json[:curStatus] = "s:disabled"
@@ -410,6 +413,7 @@ class Haystack < OpenStudio::Ruleset::ModelUserScript
           var_haystack_json[:id] = uuid
           var_haystack_json[:dis] = create_str(globalvar.nameString)
           var_haystack_json[:siteRef] = create_ref(building.handle)
+          #var_haystack_json[:siteRef] = site_id
           var_haystack_json[:point]="m:"
           var_haystack_json[:writable]="m:" 
           var_haystack_json[:writeStatus] = "s:ok"

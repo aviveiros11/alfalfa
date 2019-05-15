@@ -11,12 +11,12 @@ class PowerSensor240 < OpenStudio::Measure::ModelMeasure
 
   # human readable description
   def description
-    return " expose Electricity:Facility through EMS modules"
+    return "Expose the Electricity:Facility from Output:Meter to be a Haystack tagged point"
   end
 
   # human readable description of modeling approach
   def modeler_description
-    return " EMS:program, EMS:GlobalVariable"
+    return " The expososure is through multiple EP modules==> EMS:GlobalVariable, EMS:OutputVariable, EMS:Program, EMS:CallingPoints, Output:Variable, Output:Meter  "
   end
 
   # define the arguments that the user will input
