@@ -611,7 +611,45 @@ class SimBuild20 < OpenStudio::Measure::ModelMeasure
     people_defs.sort.each do |people_def|
 	  people_def.setThermalComfortModelType(0, 'FANGER')
     end
-	
+
+
+    ################################################################################################################################
+    #########################      add new output variables                    #############################
+    #########################             zone PPD. the key is people object name, not zone name             #############################
+    ################################################################################################################################
+
+    outvar = OpenStudio::Model::OutputVariable.new("Zone Thermal Comfort Fanger Model PPD", model)
+    outvar.setKeyValue("CORE_ZN ZN Office WholeBuilding - Sm Office People")
+    outvar.setReportingFrequency(report_freq)
+    #outvar.setName("Core_SAMassFlow")
+    outvar.setExportToBCVTB(true)
+
+    outvar = OpenStudio::Model::OutputVariable.new("Zone Thermal Comfort Fanger Model PPD", model)
+    outvar.setKeyValue("Perimeter_ZN_1 ZN Office WholeBuilding - Sm Office People")
+    outvar.setReportingFrequency(report_freq)
+    #outvar.setName("Core_SAMassFlow")
+    outvar.setExportToBCVTB(true)
+
+    outvar = OpenStudio::Model::OutputVariable.new("Zone Thermal Comfort Fanger Model PPD", model)
+    outvar.setKeyValue("Perimeter_ZN_2 ZN Office WholeBuilding - Sm Office People")
+    outvar.setReportingFrequency(report_freq)
+    #outvar.setName("Core_SAMassFlow")
+    outvar.setExportToBCVTB(true)
+
+    outvar = OpenStudio::Model::OutputVariable.new("Zone Thermal Comfort Fanger Model PPD", model)
+    outvar.setKeyValue("Perimeter_ZN_3 ZN Office WholeBuilding - Sm Office People")
+    outvar.setReportingFrequency(report_freq)
+    #outvar.setName("Core_SAMassFlow")
+    outvar.setExportToBCVTB(true)
+
+    outvar = OpenStudio::Model::OutputVariable.new("Zone Thermal Comfort Fanger Model PPD", model)
+    outvar.setKeyValue("Perimeter_ZN_4 ZN Office WholeBuilding - Sm Office People")
+    outvar.setReportingFrequency(report_freq)
+    #outvar.setName("Core_SAMassFlow")
+    outvar.setExportToBCVTB(true)
+
+
+
     ################################################################################################################################
 	#########################      add new output variables                    #############################
 	#########################             check if its value == I give              #############################
