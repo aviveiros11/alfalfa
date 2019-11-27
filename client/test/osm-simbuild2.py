@@ -84,6 +84,18 @@ for i in range(simu_steps):
         print ("heating core/p1/p2/p3/p4: ", heating_core, "/", heating_p1, "/", heating_p2, "/", \
                 heating_p3, "/", heating_p4, "/",  "\n")
 
+
+        # output ppd-core
+        ppd_core = model_outputs["CORE_ZN ZN Office WholeBuilding - Sm Office People_Zone Thermal Comfort Fanger Model PPD"]
+        ppd_p1   = model_outputs["Perimeter_ZN_1 ZN Office WholeBuilding - Sm Office People_Zone Thermal Comfort Fanger Model PPD"]
+        ppd_p2   = model_outputs["Perimeter_ZN_2 ZN Office WholeBuilding - Sm Office People_Zone Thermal Comfort Fanger Model PPD"]
+        ppd_p3   = model_outputs["Perimeter_ZN_3 ZN Office WholeBuilding - Sm Office People_Zone Thermal Comfort Fanger Model PPD"]
+        ppd_p4   = model_outputs["Perimeter_ZN_4 ZN Office WholeBuilding - Sm Office People_Zone Thermal Comfort Fanger Model PPD"]
+
+        print ("PPD core/p1/p2/p3/p4: ", ppd_core, "/", ppd_p1, "/", ppd_p2, "/", \
+                ppd_p3, "/", ppd_p4, "/",  "\n")
+
+
         #Here i only use a fake RL control.
         #Here you may need to replace it using your RL control
         flow = RL_control(state_vars)
