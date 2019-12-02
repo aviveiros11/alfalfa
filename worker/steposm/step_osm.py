@@ -47,6 +47,8 @@ import redis
 from dateutil import parser
 
 # Replace Date
+
+
 def replace_idf_settings(idf_file, pattern, startDatetime, endDatetime, time_step):
     # Generate Lines
     begin_month_line = '  {},                                      !- Begin Month\n'.format(startDatetime.month)
@@ -70,37 +72,39 @@ def replace_idf_settings(idf_file, pattern, startDatetime, endDatetime, time_ste
         for line in lines:
             count = count + 1
             if pattern in line:
-                #RunPeriod block
+                # RunPeriod block
                 line_runperiod = count
             if 'Timestep,' in line:
-                line_timestep = count+1
+                line_timestep = count + 1
 
         for i, line in enumerate(lines):
-            if (i<line_runperiod or i>line_runperiod+12) and (i != line_timestep) :
+            if (i < line_runperiod or i > line_runperiod + 12) and (i != line_timestep):
                 f.write(line)
             elif i == line_timestep:
-                line= time_step_line
+                line = time_step_line
                 f.write(line)
             else:
-               if i == line_runperiod + 2:
-                  line = begin_month_line
-               elif i == line_runperiod + 3:
-                  line = begin_day_line
-               elif i == line_runperiod + 4:
-                  line = begin_year_line
-               elif i == line_runperiod + 5:
-                  line = end_month_line
-               elif i == line_runperiod + 6:
-                  line = end_day_line
-               elif i == line_runperiod + 7:
-                  line = end_year_line
-               elif i == line_runperiod + 8:
-                  line = dayOfweek_line
-               else:
-                  line = lines[i]
-               f.write(line)
+                if i == line_runperiod + 2:
+                    line = begin_month_line
+                elif i == line_runperiod + 3:
+                    line = begin_day_line
+                elif i == line_runperiod + 4:
+                    line = begin_year_line
+                elif i == line_runperiod + 5:
+                    line = end_month_line
+                elif i == line_runperiod + 6:
+                    line = end_day_line
+                elif i == line_runperiod + 7:
+                    line = end_year_line
+                elif i == line_runperiod + 8:
+                    line = dayOfweek_line
+                else:
+                    line = lines[i]
+                f.write(line)
 
 # Simulation Process Class
+
+
 class SimProcess:
     # Simulation Status
     # sim_status = 0,1,2,3
@@ -132,16 +136,17 @@ class SimProcess:
         self.time_scale = 1
         self.real_time_flag = True
 
-def get_energyplus_datetime(variables, outputs):
-    month_index = variables.outputIndexFromTypeAndName("current_month","EMS")
-    day_index = variables.outputIndexFromTypeAndName("current_day","EMS")
-    hour_index = variables.outputIndexFromTypeAndName("current_hour","EMS")
-    minute_index = variables.outputIndexFromTypeAndName("current_minute","EMS")
 
-    day = int(round(outputs[ day_index ]))
-    hour= int(round(outputs[ hour_index ]))
-    minute= int(round(outputs[ minute_index ]))
-    month = int(round(outputs[ month_index ]))
+def get_energyplus_datetime(variables, outputs):
+    month_index = variables.outputIndexFromTypeAndName("current_month", "EMS")
+    day_index = variables.outputIndexFromTypeAndName("current_day", "EMS")
+    hour_index = variables.outputIndexFromTypeAndName("current_hour", "EMS")
+    minute_index = variables.outputIndexFromTypeAndName("current_minute", "EMS")
+
+    day = int(round(outputs[day_index]))
+    hour = int(round(outputs[hour_index]))
+    minute = int(round(outputs[minute_index]))
+    month = int(round(outputs[month_index]))
     year = sp.startDatetime.year
 
     if minute == 60 and hour == 23:
@@ -153,10 +158,12 @@ def get_energyplus_datetime(variables, outputs):
 
     return datetime.datetime(year, month, day, hour, minute)
 
+
 def reset(tarinfo):
     tarinfo.uid = tarinfo.gid = 0
     tarinfo.uname = tarinfo.gname = "root"
     return tarinfo
+
 
 def finalize_simulation():
     sim_id = str(uuid.uuid4())
@@ -166,19 +173,20 @@ def finalize_simulation():
     tar_file.add(sp.workflow_directory, filter=reset, arcname=site_ref)
     tar_file.close()
 
-    s3_key = "simulated/%s/%s" % (sp.site_ref,tar_name)
+    s3_key = "simulated/%s/%s" % (sp.site_ref, tar_name)
     bucket.upload_file(tar_name, s3_key)
 
     os.remove(tar_name)
     shutil.rmtree(sp.workflow_directory)
 
     site = recs.find_one({"_id": sp.site_ref})
-    name = site.get("rec",{}).get("dis", "Unknown") if site else "Unknown"
-    name = name.replace("s:","")
+    name = site.get("rec", {}).get("dis", "Unknown") if site else "Unknown"
+    name = name.replace("s:", "")
     time = str(datetime.datetime.now(tz=pytz.UTC))
     sims.insert_one({"_id": sim_id, "siteRef": sp.site_ref, "s3Key": s3_key, "name": name, "timeCompleted": time})
-    recs.update_one({"_id": sp.site_ref}, {"$set": {"rec.simStatus": "s:Stopped"}, "$unset": {"rec.datetime": "","rec.step": "" } }, False)
-    recs.update_many({"_id": sp.site_ref, "rec.cur": "m:"}, {"$unset": {"rec.curVal": "", "rec.curErr": ""}, "$set": { "rec.curStatus": "s:disabled" } }, False)
+    recs.update_one({"_id": sp.site_ref}, {"$set": {"rec.simStatus": "s:Stopped"}, "$unset": {"rec.datetime": "", "rec.step": ""}}, False)
+    recs.update_many({"_id": sp.site_ref, "rec.cur": "m:"}, {"$unset": {"rec.curVal": "", "rec.curErr": ""}, "$set": {"rec.curStatus": "s:disabled"}}, False)
+
 
 def getInputs(bypass_flag):
     master_index = sp.variables.inputIndexFromVariableName("MasterEnable")
@@ -206,6 +214,7 @@ def getInputs(bypass_flag):
 ##############     The Entry for the Main section of runsite.py      #############
 #########   The previous section contains all the functions to call  #############
 ##################################################################################
+
 
 # Mongo Database
 mongo_client = MongoClient(os.environ['MONGO_URL'])
@@ -236,14 +245,14 @@ if len(sys.argv) == 7:
 
     startDatetime = sys.argv[4]
     if startDatetime == 'undefined':
-        startDatetime = datetime.datetime(year,1,1,0,0)
+        startDatetime = datetime.datetime(year, 1, 1, 0, 0)
     else:
         startDatetime = parse(startDatetime, ignoretz=True)
         startDatetime = startDatetime.replace(second=0, microsecond=0)
 
     endDatetime = sys.argv[5]
     if endDatetime == 'undefined':
-        endDatetime = datetime.datetime(year,12,31,23,59)
+        endDatetime = datetime.datetime(year, 12, 31, 23, 59)
     else:
         endDatetime = parse(endDatetime, ignoretz=True)
         endDatetime = endDatetime.replace(second=0, microsecond=0)
@@ -270,7 +279,7 @@ directory = os.path.join(sim_path, site_ref)
 try:
     if not os.path.exists(directory):
         os.makedirs(directory)
-except:
+except BaseException:
     sys.exit(1)
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -323,7 +332,7 @@ try:
     subprocess.call(['openstudio', 'steposm/translate_osm.rb', osmpath, sp.idf])
     shutil.copyfile(variables_path, variables_new_path)
 
-    ## Simulation Parameters
+    # Simulation Parameters
     replace_idf_settings(sp.idf + '.idf', 'RunPeriod,', sp.startDatetime, sp.endDatetime, sp.sim_step_per_hour)
 
     # Arguments
@@ -360,7 +369,7 @@ try:
     bypass_flag = True
 
     # Simulation Status
-    if ep.is_running == True:
+    if ep.is_running:
         sp.sim_status = 1
 
     # Set next step
@@ -372,10 +381,10 @@ try:
         pubsub.subscribe(sp.site_ref)
 
     recs.update_one({"_id": sp.site_ref}, {"$set": {"rec.simStatus": "s:Starting"}}, False)
-    real_time_step=0
+    real_time_step = 0
 
     while True:
-        stop = False;
+        stop = False
         t = datetime.datetime.now().timestamp()
 
         if external_clock:
@@ -388,17 +397,17 @@ try:
                     stop = True
 
         # Iterating over timesteps
-        if ( ep.is_running and (sp.sim_status == 1) and (not stop) and t >= next_t and (not external_clock) ) or \
-           ( (ep.is_running and (sp.sim_status == 1) and (not stop) and bypass_flag) ) or \
-           ( ep.is_running and (sp.sim_status == 1) and (not stop) and (not bypass_flag) and external_clock and advance ):
+        if (ep.is_running and (sp.sim_status == 1) and (not stop) and t >= next_t and (not external_clock)) or \
+           ((ep.is_running and (sp.sim_status == 1) and (not stop) and bypass_flag)) or \
+           (ep.is_running and (sp.sim_status == 1) and (not stop) and (not bypass_flag) and external_clock and advance):
 
             # Check for "Stopping" here so we don't hit the database as fast as the event loop will run
             # Instead we only check the database for stopping at each simulation step
             rec = recs.find_one({"_id": sp.site_ref})
-            if rec and (rec.get("rec",{}).get("simStatus") == "s:Stopping") :
-                stop = True;
+            if rec and (rec.get("rec", {}).get("simStatus") == "s:Stopping"):
+                stop = True
 
-            if stop == False:
+            if not stop:
                 # Write user inputs to E+
                 inputs = getInputs(bypass_flag)
                 ep.write(mlep.mlep_encode_real_data(2, 0, (ep.kStep - 1) * ep.deltaT, inputs))
@@ -414,7 +423,7 @@ try:
                     bypass_flag = False  # Stop bypass
                     redis_client.hset(site_ref, 'control', 'idle')
 
-                if bypass_flag == False:
+                if not bypass_flag:
                     for output_id in sp.variables.outputIds():
                         output_index = sp.variables.outputIndex(output_id)
                         if output_index == -1:
@@ -435,9 +444,9 @@ try:
                     next_t = next_t + sp.sim_step_time / sp.time_scale
 
                 # Check Stop
-                if ( ep.is_running == True and (energyplus_datetime > sp.endDatetime) ) :
+                if (ep.is_running and (energyplus_datetime > sp.endDatetime)):
                     stop = True
-                elif ( sp.sim_status == 3 and ep.is_running == True ) :
+                elif (sp.sim_status == 3 and ep.is_running):
                     stop = True
 
                 if external_clock and not bypass_flag:
@@ -452,8 +461,7 @@ try:
             sp.sim_status = 0
             break
 
-except:
+except BaseException:
     logger.error("Simulation error: %s", sys.exc_info()[0])
     traceback.print_exc()
     finalize_simulation()
-

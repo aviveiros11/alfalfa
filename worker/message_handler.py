@@ -34,6 +34,8 @@ import logging
 from pymongo import MongoClient
 
 # Process Message
+
+
 def process_message(message):
     try:
         message_body = json.loads(message.body)
@@ -50,7 +52,7 @@ def process_message(message):
                 externalClock = str(message_body.get('externalClock', 'undefined'))
 
                 site = recs.find_one({"_id": siteRef})
-                simType = site.get("rec",{}).get("simType", "osm").replace("s:","")
+                simType = site.get("rec", {}).get("simType", "osm").replace("s:", "")
 
                 logger.info('Start simulation for site_ref: %s, and simType: %s' % (siteRef, simType))
 
@@ -91,6 +93,7 @@ def process_message(message):
     except Exception as e:
         print('Exception while processing message: %s' % e, file=sys.stderr)
 
+
 # ======================================================= MAIN ========================================================
 if __name__ == '__main__':
     try:
@@ -113,7 +116,7 @@ if __name__ == '__main__':
         ch = logging.StreamHandler()
         ch.setFormatter(formatter)
         logger.addHandler(ch)
-    except:
+    except BaseException:
         print('Exception while starting up worker', file=sys.stderr)
         sys.exit(1)
 
@@ -126,7 +129,7 @@ if __name__ == '__main__':
             logger.info('Message Received with payload: %s' % msg.body)
             # Process Message
             process_message(msg)
-        #else:
+        # else:
         #    if "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI" in os.environ:
         #        ecsclient = boto3.client('ecs', region_name=os.environ['REGION'])
         #        response = ecsclient.describe_services(cluster='worker_ecs_cluster',services=['worker-service'])['services'][0]
@@ -140,4 +143,3 @@ if __name__ == '__main__':
         #                service='worker-service',
         #                desiredCount=(desiredCount - 1))
         #            sys.exit(0)
-
